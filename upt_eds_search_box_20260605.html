@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<!-- s1949186 -->
+<!-- includes IR limiter -->
+<title>Búsqueda EDS Biblioteca UTP</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://support.ebscohost.com/eit/scripts/ebscohostsearch.js"></script>
+
+<style>
+
+body{
+font-family:"Noto Sans", Arial;
+background:#f5f7fa;
+}
+
+.eds-box{
+max-width:900px;
+margin:auto;
+padding:30px 20px;
+}
+
+.eds-title{
+text-align:center;
+font-weight:700;
+font-size:1.4rem;
+margin-bottom:20px;
+}
+
+.search-bar{
+display:flex;
+border:1px solid #cfd4da;
+border-radius:6px;
+overflow:hidden;
+background:white;
+}
+
+.search-filter{
+width:180px;
+border:none;
+border-right:1px solid #dee2e6;
+padding:10px;
+font-size:0.9rem;
+background:#f8f9fa;
+}
+
+.search-input{
+flex:1;
+border:none;
+padding:12px;
+font-size:1rem;
+}
+
+.search-input:focus{
+outline:none;
+}
+
+.search-btn{
+background:#1f4fa3;
+color:white;
+border:none;
+padding:0 22px;
+display:flex;
+align-items:center;
+gap:8px;
+}
+
+.search-btn:hover{
+background:#163c7e;
+}
+
+.filters-row{
+margin-top:12px;
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+align-items:center;
+}
+
+.filter-btn input{
+display:none;
+}
+
+.filter-btn span,
+.link-btn{
+border:1px solid #b7bcc2;
+padding:6px 12px;
+border-radius:6px;
+font-size:0.85rem;
+font-weight:600;
+cursor:pointer;
+background:white;
+display:inline-block;
+text-decoration:none;
+color:#333;
+}
+
+.reset-btn{
+border:1px solid #b7bcc2;
+padding:6px 12px;
+border-radius:6px;
+font-size:0.85rem;
+font-weight:600;
+cursor:pointer;
+background:#f0f0f0;
+display:inline-block;
+text-decoration:none;
+color:#999;
+}
+
+.filter-btn input:checked + span{
+background:#e6eefc;
+border-color:#1f4fa3;
+color:#1f4fa3;
+}
+
+.link-btn:hover{
+background:#eef3ff;
+border-color:#1f4fa3;
+color:#1f4fa3;
+}
+
+.right-links{
+margin-left:auto;
+display:flex;
+gap:8px;
+}
+
+.toggle-area{
+display:flex;
+align-items:center;
+gap:8px;
+margin-top:15px;
+font-size:0.85rem;
+color:#444;
+}
+
+.switch{
+position:relative;
+display:inline-block;
+width:42px;
+height:22px;
+}
+
+.switch input{
+opacity:0;
+width:0;
+height:0;
+}
+
+.slider{
+position:absolute;
+cursor:pointer;
+top:0;
+left:0;
+right:0;
+bottom:0;
+background:#ccc;
+border-radius:22px;
+transition:.3s;
+}
+
+.slider:before{
+position:absolute;
+content:"";
+height:18px;
+width:18px;
+left:2px;
+bottom:2px;
+background:white;
+border-radius:50%;
+transition:.3s;
+}
+
+.switch input:checked + .slider{
+background:#1f4fa3;
+}
+
+.switch input:checked + .slider:before{
+transform:translateX(20px);
+}
+
+@media(max-width:768px){
+
+	.search-bar{
+	flex-direction:column;
+	}
+
+	.search-filter{
+	width:100%;
+	border-right:none;
+	border-bottom:1px solid #dee2e6;
+	}
+
+	.search-btn{
+	justify-content:center;
+	padding:10px;
+	}
+
+	.right-links{
+	width:100%;
+	justify-content:center;
+	margin-top:10px;
+	}
+
+}
+
+
+.error-modal{
+  display:none;
+  position:fixed;
+  z-index:9999;
+  left:0;
+  top:0;
+  width:100%;
+  height:100%;
+  background-color:rgba(0,0,0,0.4);
+  justify-content:center;
+  align-items:center;
+}
+
+.error-modal-content{
+  background:#fff;
+  padding:20px 30px;
+  border-radius:8px;
+  text-align:center;
+  font-family:Arial, sans-serif;
+  box-shadow:0 4px 12px rgba(0,0,0,0.2);
+}
+
+#error-ok{
+  margin-top:15px;
+  padding:8px 18px;
+  border:none;
+  background:#d9534f;
+  color:white;
+  border-radius:5px;
+  cursor:pointer;
+}
+
+#error-ok:hover{
+  background:#c9302c;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="eds-box">
+
+<div class="eds-title">
+Busca y accede en un solo lugar artículos, libros y recursos académicos.
+</div>
+
+<form
+action="https://research.ebsco.com/c/jkzicy/results"
+method="GET"
+target="_blank"
+id="edsForm">
+
+<input type="hidden" name="autocorrect" value="y">
+<input type="hidden" name="q" id="finalQuery">
+
+<div class="search-bar">
+
+<select id="pubtypeSelect" class="search-filter" title="Seleccione el tipo de documento del catálogo">
+
+<option value="">Filtrar por material</option>
+<option value="Folleto">Folleto</option>
+<option value="Libro">Libro</option>
+<option value="Libro Bienestar Estudiantil">Libro Bienestar Estudiantil</option>
+<option value="Libro Electrónico">Libro Electrónico</option>
+<option value="Libro Emprendimiento">Libro Emprendimiento</option>
+<option value="Libro Literatura">Libro Literatura</option>
+<option value="Monografía">Monografía</option>
+<option value="Obras de Referencia">Obras de Referencia</option>
+<option value="Práctica Profesional">Práctica Profesional</option>
+<option value="Tesis">Tesis</option>
+<option value="Tesis de Doctorado">Tesis de Doctorado</option>
+<option value="Tesis de Maestría">Tesis de Maestría</option>
+<option value="Tesis Opción Materia">Tesis Opción Materia</option>
+<option value="Tesis Teórico Práctico">Tesis Teórico Práctico</option>
+
+</select>
+
+<input
+class="search-input"
+type="search"
+id="userQuery"
+title="Escriba aquí sus términos de búsqueda."
+placeholder="¿Qué estás buscando?"
+required>
+
+<select name="facetFilter" id="facetFilterLibrary" class="search-filter" title="Seleccione la bibioteca">
+
+<option value="">Todas las bibliotecas</option>
+
+<option value="LocationLibrary:QmlibGlvdGVjYSBDZW50cmFs">Biblioteca Central</option>
+<option value="LocationLibrary:QmlibGlvdGVjYSBWaXJ0dWFsIFV0cA">Biblioteca Virtual UTP</option>
+<option value="LocationLibrary:Q2VudHJvIFJlZ2lvbmFsIERlIEF6dWVybw">Centro Regional de Azuero</option>
+<option value="LocationLibrary:Q2VudHJvIFJlZ2lvbmFsIERlIEJvY2FzIERlbCBUb3Jv">Centro Regional de Bocas del Toro</option>
+<option value="LocationLibrary:Q2VudHJvIFJlZ2lvbmFsIERlIENoaXJpcXVp">Centro Regional de Chiriquí</option>
+<option value="LocationLibrary:Q2VudHJvIFJlZ2lvbmFsIERlIENvY2xl">Centro Regional de Coclé</option>
+<option value="LocationLibrary:Q2VudHJvIFJlZ2lvbmFsIERlIENvbG9u">Centro Regional de Colón</option>
+<option value="LocationLibrary:Q2VudHJvIFJlZ2lvbmFsIERlIFBhbmFtYSBPZXN0ZQ">Centro Regional de Panama Oeste</option>
+<option value="LocationLibrary:Q2VudHJvIFJlZ2lvbmFsIERlIFZlcmFndWFz">Centro Regional de Varaguas</option>
+<option value="LocationLibrary:RXNwZWNpYWxpemFkYSBEZSBBdmlhY2lvbjogU2VkZSBIb3dhcmQ">Especializada de Aviación: Sede Howard</option>
+
+
+</select>
+
+<button class="search-btn" type="submit" title="Empezar la búsqueda.">
+<i class="fa fa-search"></i> Buscar
+</button>
+
+</div>
+
+
+<div class="filters-row">
+
+<label class="filter-btn" title="Limitar la búsqueda solo a recursos del catálogo UTP.">
+<input type="checkbox" id="FC" name="limiters" value="FC:Y">
+<span>Catálogo</span>
+</label>
+
+<label class="filter-btn" title="Limitar la búsqueda solo a documentos del repositorio institucional">
+<input type="checkbox" id="FC1" name="limiters" value="FC1:Y">
+<span>Repositorio Institucional</span>
+</label>
+
+<label class="filter-btn" title="Limitar la búsqueda solo a libros electrónicos.">
+<input type="checkbox" id="FM20" name="limiters" value="FM20:Y">
+<span>Libros electrónicos</span>
+</label>
+
+<div class="right-links">
+
+<a class="link-btn"
+href="https://research.ebsco.com/c/jkzicy/search/advanced/filters?acrl_values=ip+guest&autocorrect=y"
+target="_blank" title="Búsqueda multicampo y más opciones de filtros.">
+Búsqueda Avanzada
+</a>
+
+<a class="link-btn"
+href="https://connect.ebsco.com/s/article/EBSCO-Discovery-Service-Quick-Start-Guide?language=es"
+target="_blank" title="Recursos útiles para utilizar EDS, Concept Map y Publication Finder.">
+Ayuda
+</a>
+
+<!-- a class="reset-btn" href="javascript:document.getElementById('edsForm').reset();">Reset</a -->
+
+</div>
+
+</div>
+
+
+<div class="toggle-area" title="Busque con frases o preguntas en lenguaje natural">
+
+<label class="switch">
+<input type="checkbox" name="searchMode" value="enhanced">
+<span class="slider"></span>
+</label>
+
+<span>Búsqueda assistida por IA</span>
+
+</div>
+
+</form>
+
+</div>
+
+<div id="custom-error" class="error-modal">
+  <div class="error-modal-content">
+    <p id="error-message"></p>
+    <button id="error-ok">OK</button>
+  </div>
+</div>
+
+<script>
+
+const fc = document.getElementById("FC");
+const fc1 = document.getElementById("FC1");
+const fm20 = document.getElementById("FM20");
+
+const facetFilterLibrary = document.getElementById("facetFilterLibrary");
+const pubtypeSelect = document.getElementById("pubtypeSelect");
+
+function selectLimiter(selected) {
+
+    // Only one limiter can be selected
+    fc.checked = (selected === fc);
+    fc1.checked = (selected === fc1);
+    fm20.checked = (selected === fm20);
+
+    // Repository and eBooks do not support
+    // Catalog-specific filters
+    if (selected === fc1 || selected === fm20) {
+
+        facetFilterLibrary.value = "";
+        pubtypeSelect.value = "";
+
+    }
+}
+
+/* Material type => Catalog */
+
+pubtypeSelect.addEventListener("change", function () {
+
+    if (this.value !== "") {
+        selectLimiter(fc);
+    }
+
+});
+
+/* Library => Catalog */
+
+facetFilterLibrary.addEventListener("change", function () {
+
+    if (this.value !== "") {
+        selectLimiter(fc);
+    }
+
+});
+
+/* Limiter behavior */
+
+fc.addEventListener("change", function () {
+
+    if (this.checked) {
+        selectLimiter(fc);
+    }
+
+});
+
+fc1.addEventListener("change", function () {
+
+    if (this.checked) {
+        selectLimiter(fc1);
+    }
+
+});
+
+fm20.addEventListener("change", function () {
+
+    if (this.checked) {
+        selectLimiter(fm20);
+    }
+
+});
+
+/* Build final query */
+
+document.getElementById("edsForm").addEventListener("submit", function () {
+
+    const userQuery = document.getElementById("userQuery").value.trim();
+    const pubType = pubtypeSelect.value;
+
+    let finalQuery = userQuery;
+
+    if (fc.checked && pubType !== "") {
+        finalQuery = `${userQuery} AND (PZ ${pubType})`;
+    }
+
+    document.getElementById("finalQuery").value = finalQuery;
+
+    console.log("Final query: " + finalQuery);
+
+});
+
+/* Reset form on page load */
+
+window.addEventListener("load", function () {
+
+    const form = document.getElementById("edsForm");
+
+    if (form) {
+        form.reset();
+        console.log("Form reset.");
+    }
+
+    document.getElementById("userQuery").value = "";
+    document.getElementById("finalQuery").value = "";
+
+    fc.checked = false;
+    fc1.checked = false;
+    fm20.checked = false;
+
+    facetFilterLibrary.value = "";
+    pubtypeSelect.value = "";
+
+    console.log("Values cleared.");
+
+});
+
+/* Validation */
+
+const queryinput = document.getElementById("userQuery");
+const customError = document.getElementById("custom-error");
+const errorMessage = document.getElementById("error-message");
+const okButton = document.getElementById("error-ok");
+
+customError.style.display = "none";
+
+// Require at least one letter or number
+const validPattern = /[a-zA-Z0-9À-ÿ]/;
+
+queryinput.addEventListener("invalid", function (event) {
+
+    event.preventDefault();
+
+    const value = queryinput.value.trim();
+
+    if (value === "" || !validPattern.test(value)) {
+        queryinput.setCustomValidity("Ingrese términos de búsqueda válidos.");
+    } else {
+        queryinput.setCustomValidity("");
+    }
+
+    errorMessage.textContent = queryinput.validationMessage;
+    customError.style.display = "flex";
+
+});
+
+queryinput.addEventListener("input", function (event) {
+
+    const value = event.target.value.trim();
+
+    if (value !== "" && validPattern.test(value)) {
+        event.target.setCustomValidity("");
+        customError.style.display = "none";
+    }
+
+});
+
+okButton.addEventListener("click", function () {
+
+    customError.style.display = "none";
+
+});
+</script>
+</body>
+</html>
